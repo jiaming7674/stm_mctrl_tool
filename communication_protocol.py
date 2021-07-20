@@ -17,13 +17,13 @@ class CommunicationProtocol():
 
         self.com_status = False
 
-        self.recv_buf_size = 1024
-        self.received_bytes_buf = bytearray(self.recv_buf_size)
+        self.recv_bytes_buf_size = 1024
+        self.received_bytes_buf = bytearray(self.recv_bytes_buf_size)
         self.write_ptr = 0
         self.read_ptr = 0
 
         self.num_channel = 2
-        self.buf_size = 128
+        self.data_buf_size = 128
         self.received_data_buf = []
 
         self.frame_size = 4 + 2 * self.num_channel
@@ -32,7 +32,7 @@ class CommunicationProtocol():
         self.write_idx = 0
 
         for _ in range(self.num_channel):
-            self.received_data_buf.append(np.zeros(self.buf_size))
+            self.received_data_buf.append(np.zeros(self.data_buf_size))
 
 
     def open_com_port(self):
@@ -79,7 +79,7 @@ class CommunicationProtocol():
                     self.received_bytes_buf[self.write_ptr] = ch[i]
                     self.write_ptr += 1
 
-                    if self.write_ptr >= self.recv_buf_size:
+                    if self.write_ptr >= self.recv_bytes_buf_size:
                         self.write_ptr = 0
 
             except:
@@ -89,7 +89,7 @@ class CommunicationProtocol():
     def bytes_to_read(self):
         '''Get how many bytes can be read.'''
         d = self.write_ptr - self.read_ptr
-        if d < 0: d += self.recv_buf_size
+        if d < 0: d += self.recv_bytes_buf_size
 
         return d
 
@@ -108,26 +108,26 @@ class CommunicationProtocol():
 
                 for i in range(self.frame_size):
                     ptr = self.read_ptr + i
-                    if ptr >= self.recv_buf_size:
-                        ptr -= self.recv_buf_size
+                    if ptr >= self.recv_bytes_buf_size:
+                        ptr -= self.recv_bytes_buf_size
                     frame_bytes[i] = self.received_bytes_buf[ptr]
 
                 if frame_bytes[0] == 90 and frame_bytes[self.frame_size-2] == 165:
                     self.read_ptr += self.frame_size
 
-                    if self.read_ptr >= self.recv_buf_size:
-                        self.read_ptr -= self.recv_buf_size
+                    if self.read_ptr >= self.recv_bytes_buf_size:
+                        self.read_ptr -= self.recv_bytes_buf_size
 
                     for j in range(self.num_channel):
                         self.received_data_buf[j][self.write_idx] = int.from_bytes(frame_bytes[j*2+2:j*2+4], 'little', signed=True)
 
                     self.write_idx += 1
-                    if self.write_idx >= self.buf_size:
+                    if self.write_idx >= self.data_buf_size:
                         self.write_idx = 0
 
                 else:
                     self.read_ptr += 1
-                    if self.read_ptr >= self.buf_size:
+                    if self.read_ptr >= self.recv_bytes_buf_size:
                         self.read_ptr = 0
 
             else:
@@ -136,7 +136,7 @@ class CommunicationProtocol():
 
     def datas_to_read(self):
         d = self.write_idx - self.read_idx
-        if d < 0: d += self.buf_size
+        if d < 0: d += self.data_buf_size
         return d
 
     
@@ -151,7 +151,7 @@ class CommunicationProtocol():
                 ng.append(self.received_data_buf[i][self.read_idx])
 
             self.read_idx += 1
-            if self.read_idx >= self.buf_size:
+            if self.read_idx >= self.data_buf_size:
                 self.read_idx = 0
 
             data.append(ng)
