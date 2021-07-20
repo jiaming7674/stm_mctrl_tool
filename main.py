@@ -1,8 +1,8 @@
 import numpy as np
 import tkinter as tk
 from tkinter import ttk
-
-from serial_port import COMPort
+import threading
+from communication_protocol import CommunicationProtocol
 from scope import Scope
 
 
@@ -19,7 +19,7 @@ class mainGUI():
 
         self.comState = False
 
-        self.com_port = COMPort()
+        self.com_protocol = CommunicationProtocol()
 
         # a frame contains COM's information, and start/stop button
         frame_COMinf = tk.Frame(self.window)
@@ -64,7 +64,7 @@ class mainGUI():
         self.InputText=tk.Text(frameTransSon, wrap=tk.WORD, width=60, height=5, yscrollcommand=scrollbarTrans.set)
         self.InputText.pack(side='top')
 
-        self.entry1=tk.Entry(frameTransSon, textvariable='0')
+        self.entry1=tk.Entry(frameTransSon, textvariable=tk.StringVar(value='0'))
         self.entry1.pack(side='left')
 
         self.buttonSend = tk.Button(frameTrans, text="Send", command=self.processButtonSend)
@@ -76,12 +76,12 @@ class mainGUI():
     def processButtonSS(self):
         
         if (self.comState):
-            if self.com_port.close() == True:
+            if self.com_protocol.close_com_port() == True:
                 self.comState = False
                 self.buttonSS["text"] = "Start"
 
         else:
-            if self.com_port.open() == True:
+            if self.com_protocol.open_com_port() == True:
                 self.comState = True
                 self.buttonSS["text"] = "Stop"
 
@@ -91,28 +91,27 @@ class mainGUI():
 
             val = int(stext)
 
-            bytesToSend = int.to_bytes(val, length=12, byteorder='little')
+            bytesToSend = int.to_bytes(val, length=12, byteorder='little', signed=True)
             print(bytesToSend)
-            self.com_port.serial_port.write(bytesToSend)
+            self.com_protocol.serial_port.write(bytesToSend)
+
 
     def processButtonOpenScope(self):
         if (self.comState):
-
             self.ssop.start()
 
 
     def readFromSerialPort(self):
-        data = []
 
+        data = []
         if (self.comState):
-            while(self.com_port.is_buffer_not_empty()):
-                data.append(self.com_port.read_from_buffer())
+            data = self.com_protocol.read_from_data_buffer()
 
         return data
 
 
     def quit(self):
-        self.com_port.close()
+        self.com_protocol.close_com_port()
         self.window.destroy()
 
 

@@ -18,7 +18,7 @@ class Scope():
 
         self.callback = None
 
-        self.c = ['blue', 'red']
+        self.c = ['blue', 'red', 'green']
 
         for i in range(len(self.ax)):
             line = plt.Line2D(self.x , np.zeros(len(self.x)), color=self.c[i])
