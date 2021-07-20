@@ -26,7 +26,7 @@ class CommunicationProtocol():
         self.data_buf_size = 128
         self.received_data_buf = []
 
-        self.frame_size = 4 + 2 * self.num_channel
+        self.frame_size = 6 + 2 * self.num_channel
 
         self.read_idx = 0
         self.write_idx = 0
@@ -112,14 +112,14 @@ class CommunicationProtocol():
                         ptr -= self.recv_bytes_buf_size
                     frame_bytes[i] = self.received_bytes_buf[ptr]
 
-                if frame_bytes[0] == 90 and frame_bytes[self.frame_size-2] == 165:
+                if frame_bytes[0] == int('5A', 16) and frame_bytes[self.frame_size-1] == int('A5', 16):
                     self.read_ptr += self.frame_size
 
                     if self.read_ptr >= self.recv_bytes_buf_size:
                         self.read_ptr -= self.recv_bytes_buf_size
 
                     for j in range(self.num_channel):
-                        self.received_data_buf[j][self.write_idx] = int.from_bytes(frame_bytes[j*2+2:j*2+4], 'little', signed=True)
+                        self.received_data_buf[j][self.write_idx] = int.from_bytes(frame_bytes[j*2+4:j*2+6], 'little', signed=True)
 
                     self.write_idx += 1
                     if self.write_idx >= self.data_buf_size:

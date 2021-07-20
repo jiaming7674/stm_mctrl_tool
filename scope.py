@@ -7,6 +7,8 @@ class Scope():
 
     def __init__(self):
 
+        self.enable = False
+
         self.fig, self.ax = plt.subplots(2, 1)
 
         self.lines = []
@@ -56,6 +58,8 @@ class Scope():
         return self.lines
 
     def start(self):
+
+        self.enable = True
 
         self.ani = animation.FuncAnimation(
             self.fig, func=self.animate, init_func=self.plot_init,
