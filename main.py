@@ -84,8 +84,8 @@ class mainGUI():
         self.entrySpeed = tk.Entry(frameControl, textvariable=tk.IntVar(value='0'))
 
         self.buttonSetSpeed = tk.Button(frameControl, text="Set", command=self.processButtonSend, width = 10)
-        self.buttonMotorStart = tk.Button(frameControl, text="Run", command=self.processButtonMotorStart, width = 10)
-        self.buttonMotorStop = tk.Button(frameControl, text="Stop", command=self.processButtonMotorStop, width = 10)
+        self.buttonMotorStart = tk.Button(frameControl, text="Run", command=self.processButtonMotorStart, width = 10, bg='green')
+        self.buttonMotorStop = tk.Button(frameControl, text="Stop", command=self.processButtonMotorStop, width = 10, bg='red')
 
         labelSpeed.grid(row=0, column=0, padx=5, pady=3)
         self.entrySpeed.grid(row=0, column=1, padx=5, pady=3)
@@ -98,9 +98,23 @@ class mainGUI():
         frameDebug = tk.Frame(self.window)
         frameDebug.grid(row=3, column=0)
 
+        # labelD1 = tk.Label(frameDebug, text="D1: ")
+        # labelD2 = tk.Label(frameDebug, text="D2: ")
+        # labelD3 = tk.Label(frameDebug, text="D3: ")
+
+        self.labelDebug = []
+        self.entryDebug = []
+
+        for i in range(5):
+            self.labelDebug.append(tk.Label(frameDebug, text='D'+ str(i) + ': '))
+            self.entryDebug.append(tk.Entry(frameDebug, textvariable=tk.IntVar(value=0)))
+
+            self.labelDebug[i].grid(row=i, column=0, padx=5, pady=3)
+            self.entryDebug[i].grid(row=i, column=1, padx=5, pady=3)
+
         self.buttonScope = tk.Button(frameDebug, text="Scope ON", command=self.processButtonScope)
 
-        self.buttonScope.grid(row=0, column=0)
+        self.buttonScope.grid(row=0, column=2)
 
         # Test Frame ==================================================
 
@@ -126,7 +140,7 @@ class mainGUI():
 
         # ==============================================================
 
-        self.thread1 = threading.Thread(target=self.do_work)
+        self.thread1 = threading.Thread(target=self.processUpdateData)
         self.thread1.start()
 
         self.window.mainloop()
@@ -236,7 +250,7 @@ class mainGUI():
 
             self.com_protocol.serial_port.write(bytesToSend)
 
-    def do_work(self):
+    def processUpdateData(self):
 
         while True:
             time.sleep(0.1)
@@ -247,6 +261,9 @@ class mainGUI():
             val = self.com_protocol.write_idx
             self.EntryTest2['textvariable'] = tk.StringVar(value=str(val))
 
+            for i in range(5):
+                val = self.com_protocol.motor_info_buf[i]
+                self.entryDebug[i]['textvariable'] = tk.IntVar(value=int(val))
 
 
 if __name__ == '__main__':

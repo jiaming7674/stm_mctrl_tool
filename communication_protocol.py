@@ -34,6 +34,8 @@ class CommunicationProtocol():
         for _ in range(self.num_channel):
             self.received_data_buf.append(np.zeros(self.data_buf_size))
 
+        self.motor_info_buf = np.zeros(256)
+
 
     def open_com_port(self):
         '''This method is used to open the serial port.'''
@@ -114,6 +116,10 @@ class CommunicationProtocol():
 
                 if frame_bytes[0] == int('5A', 16) and frame_bytes[self.frame_size-1] == int('A5', 16):
                     self.read_ptr += self.frame_size
+
+                    index = frame_bytes[1]
+
+                    self.motor_info_buf[index] = int.from_bytes(frame_bytes[2:4], byteorder='little')
 
                     if self.read_ptr >= self.recv_bytes_buf_size:
                         self.read_ptr -= self.recv_bytes_buf_size
