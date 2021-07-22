@@ -5,17 +5,19 @@ import matplotlib.animation as animation
 
 class Scope():
 
-    def __init__(self):
+    def __init__(self, num_of_channels=2, data_len=1000, fps=50):
 
         self.enable = False
 
-        self.fig, self.ax = plt.subplots(2, 1)
+        self.num_of_channels=num_of_channels
+        self.data_len = data_len
+        self.fps = fps
+
+        self.fig, self.ax = plt.subplots(self.num_of_channels, 1)
 
         self.lines = []
 
-        self.xlen = 1000
-
-        self.x = np.arange(0, self.xlen, 1)
+        self.x = np.arange(0, self.data_len, 1)
         self.y = []
 
         self.callback = None
@@ -27,10 +29,14 @@ class Scope():
             self.lines.append(line)
 
         for i in range(len(self.ax)):
-            self.ax[i].set_xlim([0, self.xlen])
+            self.ax[i].set_xlim([0, self.data_len])
             self.ax[i].set_ylim([-40000, 40000])
             self.ax[i].grid()
-            
+
+
+    def set_channel_ylim(self, channel, ylim):
+        self.ax[channel].set_ylim(ylim)
+
 
     def plot_init(self):
         for i in range(len(self.lines)):
@@ -46,27 +52,30 @@ class Scope():
 
         for i in range(len(data)):
 
-            self.y[0][0] = data[i][0]
-            self.y[1][0] = data[i][1]
-
-            self.y[0] = np.roll(self.y[0], -1)
-            self.y[1] = np.roll(self.y[1], -1)
+            for j in range(self.num_of_channels):
+                self.y[j][0] = data[i][j]
+                self.y[j] = np.roll(self.y[j], -1)
 
         for i in range(len(self.lines)):
             self.lines[i].set_ydata(self.y[i])
 
         return self.lines
 
-    def start(self):
+    def start(self, plt_show=False):
 
         self.enable = True
 
+        interval = int(1/self.fps * 1000)
+
+        print(interval)
+
         self.ani = animation.FuncAnimation(
             self.fig, func=self.animate, init_func=self.plot_init,
-            interval=20, blit=True, save_count=100
+            interval=interval, blit=True, save_count=100
         )
 
-        plt.show()
+        if plt_show == True:
+            plt.show()
 
 
 

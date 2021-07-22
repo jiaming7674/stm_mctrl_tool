@@ -4,6 +4,7 @@ from tkinter import ttk
 import threading
 from communication_protocol import CommunicationProtocol
 from scope import Scope
+from motor_info import MotorInfo
 
 import time
 import threading
@@ -18,77 +19,88 @@ class mainGUI():
         self.comState = False
 
         self.com_protocol = CommunicationProtocol()
-        self.scope = Scope()
-        self.scope.callback = self.readFromSerialPort
+        self.motorInfo = MotorInfo()
+
+        self.scope1 = Scope()
+        self.scope1.callback = self.readFromSerialPort
+
+        self.scope2 = Scope(num_of_channels=2, data_len=1000, fps=50)
+        self.scope2.callback = self.readFromMotorInfo
 
 
         # COM Information Frame =====================================
         frame_COMinf = tk.Frame(self.window)
         frame_COMinf.grid(row=0, column=0)
 
-        labelCOM = tk.Label(frame_COMinf, text="COMx: ")
+        self.labelCOM = tk.Label(frame_COMinf, text="COMx: ")
         self.COM = tk.StringVar(value="COM4")
-        entryCOM = tk.Entry(frame_COMinf, textvariable=self.COM)
+        self.entryCOM = tk.Entry(frame_COMinf, textvariable=self.COM)
 
-        labelBaudrate = tk.Label(frame_COMinf, text="Baudrate: ")
+        self.labelBaudrate = tk.Label(frame_COMinf, text="Baudrate: ")
         self.Baudrate = tk.IntVar(value=115200)
-        entryBaudrate = tk.Entry(frame_COMinf, textvariable=self.Baudrate)
+        self.entryBaudrate = tk.Entry(frame_COMinf, textvariable=self.Baudrate)
 
-        labelParity = tk.Label(frame_COMinf, text="Parity: ")
+        self.labelParity = tk.Label(frame_COMinf, text="Parity: ")
         self.Parity = tk.StringVar(value="NONE")
-        comboParity = ttk.Combobox(frame_COMinf, width=17, textvariable=self.Parity)
-        comboParity["values"] = ("NONE","ODD","EVEN","MARK","SPACE")
-        comboParity["state"] = "readonly"
+        self.comboParity = ttk.Combobox(frame_COMinf, width=17, textvariable=self.Parity)
+        self.comboParity["values"] = ("NONE","ODD","EVEN","MARK","SPACE")
+        self.comboParity["state"] = "readonly"
 
-        labelStopbits = tk.Label(frame_COMinf, text="Stopbits: ")
+        self.labelStopbits = tk.Label(frame_COMinf, text="Stopbits: ")
         self.Stopbits = tk.StringVar(value="1")
-        comboStopbits = ttk.Combobox(frame_COMinf, width=17, textvariable=self.Stopbits)
-        comboStopbits["values"] = ("1", "1.5", "2")
-        comboStopbits["state"] = "readonly"
+        self.comboStopbits = ttk.Combobox(frame_COMinf, width=17, textvariable=self.Stopbits)
+        self.comboStopbits["values"] = ("1", "1.5", "2")
+        self.comboStopbits["state"] = "readonly"
         self.buttonSS = tk.Button(frame_COMinf, text="COM Open", command=self.processButtonSS)
 
-        labelCOM.grid(row=0, column=0, padx=5, pady=3)
-        entryCOM.grid(row=0, column=1, padx=5, pady=3)
-        labelBaudrate.grid(row=0, column=2, padx=5, pady=3)
-        entryBaudrate.grid(row=0, column=3, padx=5, pady=3)
-        labelParity.grid(row=1, column=0, padx=5, pady=3)
-        comboParity.grid(row=1, column=1, padx=5, pady=3)
-        labelStopbits.grid(row=1, column=2, padx=5, pady=3)
-        comboStopbits.grid(row=1, column=3, padx=5, pady=3)
+        self.labelCOM.grid(row=0, column=0, padx=5, pady=3)
+        self.entryCOM.grid(row=0, column=1, padx=5, pady=3)
+        self.labelBaudrate.grid(row=0, column=2, padx=5, pady=3)
+        self.entryBaudrate.grid(row=0, column=3, padx=5, pady=3)
+        self.labelParity.grid(row=1, column=0, padx=5, pady=3)
+        self.comboParity.grid(row=1, column=1, padx=5, pady=3)
+        self.labelStopbits.grid(row=1, column=2, padx=5, pady=3)
+        self.comboStopbits.grid(row=1, column=3, padx=5, pady=3)
         self.buttonSS.grid(row=1, column=4, padx=5, pady=3)
 
-        # Motor Information Frame
+        # Motor Information Frame =====================================
         frameMotorInfo = tk.Frame(self.window)
-        frameMotorInfo.grid(row=1, column=0)
+        frameMotorInfo.grid(row=1, column=0, padx=5, pady=10)
 
-        labelConnection = tk.Label(frameMotorInfo, text="Connection: ")
-        entryConnection = tk.Entry(frameMotorInfo, textvariable=tk.StringVar(value='Not Connected'))
-        labelStatus = tk.Label(frameMotorInfo, text="Status: ")
-        entryStatus = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
-        labelError = tk.Label(frameMotorInfo, text="Error: ")
-        entryError = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelConnection = tk.Label(frameMotorInfo, text="Connection: ")
+        self.entryConnection = tk.Entry(frameMotorInfo, textvariable=tk.StringVar(value='Not Connected'))
+        self.labelStatus = tk.Label(frameMotorInfo, text="Status: ")
+        self.entryStatus = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelError = tk.Label(frameMotorInfo, text="Error: ")
+        self.entryError = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
 
-        labelConnection.grid(row=0, column=0, padx=5, pady=3, sticky=tk.W+tk.E+tk.S+tk.N)
-        entryConnection.grid(row=0, column=1, padx=5, pady=3)
-        labelStatus.grid(row=0, column=2, padx=5, pady=3)
-        entryStatus.grid(row=0, column=3, padx=5, pady=3)
-        labelError.grid(row=0, column=4, padx=5, pady=3)
-        entryError.grid(row=0, column=5, padx=5, pady=3)
+        self.labelSpeed = tk.Label(frameMotorInfo, text="Speed: ")
+        self.entrySpeed = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+
+
+        self.labelConnection.grid(row=0, column=0, padx=5, pady=3, sticky=tk.W+tk.E+tk.S+tk.N)
+        self.entryConnection.grid(row=0, column=1, padx=5, pady=3)
+        self.labelStatus.grid(row=0, column=2, padx=5, pady=3)
+        self.entryStatus.grid(row=0, column=3, padx=5, pady=3)
+        self.labelError.grid(row=0, column=4, padx=5, pady=3)
+        self.entryError.grid(row=0, column=5, padx=5, pady=3)
+        self.labelSpeed.grid(row=1, column=0, padx=5, pady=3)
+        self.entrySpeed.grid(row=1, column=1, padx=5, pady=3)
 
         # Control Frame ==================================================
 
         frameControl = tk.Frame(self.window)
-        frameControl.grid(row=2, column=0)
+        frameControl.grid(row=2, column=0, padx=5, pady=20)
 
-        labelSpeed = tk.Label(frameControl, text="Set Speed: ")
-        self.entrySpeed = tk.Entry(frameControl, textvariable=tk.IntVar(value='0'))
+        self.labelSetSpeed = tk.Label(frameControl, text="Set Speed: ")
+        self.entrySetSpeed = tk.Entry(frameControl, textvariable=tk.IntVar(value='0'))
 
         self.buttonSetSpeed = tk.Button(frameControl, text="Set", command=self.processButtonSend, width = 10)
         self.buttonMotorStart = tk.Button(frameControl, text="Run", command=self.processButtonMotorStart, width = 10, bg='green')
         self.buttonMotorStop = tk.Button(frameControl, text="Stop", command=self.processButtonMotorStop, width = 10, bg='red')
 
-        labelSpeed.grid(row=0, column=0, padx=5, pady=3)
-        self.entrySpeed.grid(row=0, column=1, padx=5, pady=3)
+        self.labelSetSpeed.grid(row=0, column=0, padx=5, pady=3)
+        self.entrySetSpeed.grid(row=0, column=1, padx=5, pady=3)
         self.buttonSetSpeed.grid(row=0, column=2, padx=5, pady=3)
         self.buttonMotorStart.grid(row=0, column=3, padx=10, pady=3, sticky=tk.E)
         self.buttonMotorStop.grid(row=0, column=4, padx=10, pady=3, sticky=tk.E)
@@ -105,7 +117,7 @@ class mainGUI():
         self.labelDebug = []
         self.entryDebug = []
 
-        for i in range(5):
+        for i in range(6):
             self.labelDebug.append(tk.Label(frameDebug, text='D'+ str(i) + ': '))
             self.entryDebug.append(tk.Entry(frameDebug, textvariable=tk.IntVar(value=0)))
 
@@ -126,17 +138,15 @@ class mainGUI():
         #labelTest.pack(side='left')
 
         self.EntryTest1 = tk.Entry(frameTest)
-        self.EntryTest1.grid(row=0, column=1, padx=5, pady=3)
+        self.EntryTest1.grid(row=0, column=0, padx=5, pady=3)
         #labelEntry.pack(side='right')
 
         self.EntryTest2 = tk.Entry(frameTest)
-        self.EntryTest2.grid(row=1, column=1, padx=5, pady=3)        
+        self.EntryTest2.grid(row=0, column=1, padx=5, pady=3)        
 
         self.buttonTest = tk.Button(frameTest, text="Test", command=self.processButtonTest, bg='red')
-        self.buttonTest.grid(row=2, column=2, padx=5, pady=3)
+        self.buttonTest.grid(row=0, column=2, padx=5, pady=3)
 
-        self.scale = tk.Scale(frameTest, orient=tk.HORIZONTAL)
-        self.scale.grid(row=2, column=1, sticky=tk.N+tk.W)
 
         # ==============================================================
 
@@ -161,7 +171,7 @@ class mainGUI():
 
     def processButtonSend(self):
         if (self.comState):
-            text = self.entrySpeed.get()
+            text = self.entrySetSpeed.get()
             val = int(text)
             b = int.to_bytes(val, length=2, byteorder='little', signed=True)
 
@@ -179,6 +189,8 @@ class mainGUI():
 
         
     def processButtonMotorStart(self):
+
+        if (self.comState):
             btarray = bytearray(12)
             btarray[0] = int('5A', 16)
             btarray[1] = int('10', 16)
@@ -191,6 +203,8 @@ class mainGUI():
 
 
     def processButtonMotorStop(self):
+
+        if (self.comState):
             btarray = bytearray(12)
             btarray[0] = int('5A', 16)
             btarray[1] = int('11', 16)
@@ -205,32 +219,31 @@ class mainGUI():
     def processButtonScope(self):
 
         if (self.comState):
-            if self.scope.enable == False:
-                self.scope.start()
+            if self.scope1.enable == False:
+                self.scope1.start()
 
-            if self.buttonScope["text"] == "Scope ON":
-                self.buttonScope["text"] = "Scope OFF"
-                cmd = '01'
-            else:
-                self.buttonScope["text"] = "Scope ON"
-                cmd = '00'
-
-            btarray = bytearray(12)
-            btarray[0] = int('5A', 16)
-            btarray[1] = int('10', 16)
-            btarray[2] = int(cmd, 16)
-            btarray[11]= int('A5', 16)
-
-            bytesToSend = bytes(btarray)
-            print(bytesToSend)
-
-            self.com_protocol.serial_port.write(bytesToSend)
+            if self.scope2.enable == False:
+                self.scope2.start(plt_show=True)
 
 
     def readFromSerialPort(self):
         data = []
         if (self.comState):
             data = self.com_protocol.read_from_data_buffer()
+
+        return data
+
+    
+    def readFromMotorInfo(self):
+        data = []
+
+        if (self.comState):
+            d = []
+            # d.append(self.com_protocol.motor_info_buf[2])
+            d.append(self.motorInfo.motor_speed_rpm)
+            d.append(self.com_protocol.motor_info_buf[3])
+
+            data.append(d)
 
         return data
 
@@ -250,10 +263,13 @@ class mainGUI():
 
             self.com_protocol.serial_port.write(bytesToSend)
 
+
     def processUpdateData(self):
 
         while True:
             time.sleep(0.1)
+
+            self.motorInfo.update_motor_info(self.com_protocol.motor_info_buf)
 
             val = self.com_protocol.read_ptr
             self.EntryTest1['textvariable'] = tk.StringVar(value=str(val))
@@ -261,7 +277,16 @@ class mainGUI():
             val = self.com_protocol.write_idx
             self.EntryTest2['textvariable'] = tk.StringVar(value=str(val))
 
-            for i in range(5):
+
+            self.scope2.set_channel_ylim(0, [0, 10000])
+
+            # Update Motor Speed
+            #val = self.com_protocol.motor_info_buf[2] * 60 / 10
+            val = self.motorInfo.motor_speed_rpm
+            self.entrySpeed['textvariable'] = tk.StringVar(value=str(int(val)) + ' rpm')
+
+
+            for i in range(len(self.entryDebug)):
                 val = self.com_protocol.motor_info_buf[i]
                 self.entryDebug[i]['textvariable'] = tk.IntVar(value=int(val))
 
