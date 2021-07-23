@@ -20,9 +20,9 @@ class Scope():
         self.x = np.arange(0, self.data_len, 1)
         self.y = []
 
-        self.callback = None
+        self.callback = self.null_func
 
-        self.c = ['blue', 'red', 'green']
+        self.c = ['blue', 'red', 'green', 'orange', 'black']
 
         for i in range(len(self.ax)):
             line = plt.Line2D(self.x , np.zeros(len(self.x)), color=self.c[i])
@@ -46,6 +46,7 @@ class Scope():
 
         return self.lines
 
+
     def animate(self, frame):
 
         data = self.callback()
@@ -60,6 +61,7 @@ class Scope():
             self.lines[i].set_ydata(self.y[i])
 
         return self.lines
+
 
     def start(self, plt_show=False):
 
@@ -77,6 +79,9 @@ class Scope():
         if plt_show == True:
             plt.show()
 
+    def null_func(self):
+
+        return []
 
 
 if __name__ == '__main__':

@@ -24,7 +24,8 @@ class mainGUI():
         self.scope1 = Scope()
         self.scope1.callback = self.readFromSerialPort
 
-        self.scope2 = Scope(num_of_channels=2, data_len=1000, fps=50)
+        num_of_channel = len(self.motorInfo.to_plot_data)
+        self.scope2 = Scope(num_of_channels=num_of_channel, data_len=1000, fps=50)
         self.scope2.callback = self.readFromMotorInfo
 
 
@@ -69,23 +70,63 @@ class mainGUI():
 
         self.labelConnection = tk.Label(frameMotorInfo, text="Connection: ")
         self.entryConnection = tk.Entry(frameMotorInfo, textvariable=tk.StringVar(value='Not Connected'))
-        self.labelStatus = tk.Label(frameMotorInfo, text="Status: ")
-        self.entryStatus = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelState = tk.Label(frameMotorInfo, text="State: ")
+        self.entryState = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
         self.labelError = tk.Label(frameMotorInfo, text="Error: ")
         self.entryError = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
 
+        self.labelSpeedRef = tk.Label(frameMotorInfo, text="Speed Ref: ")
+        self.entrySpeedRef = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
         self.labelSpeed = tk.Label(frameMotorInfo, text="Speed: ")
         self.entrySpeed = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelVBUS = tk.Label(frameMotorInfo, text="Bus Volt: ")
+        self.entryVBUS = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+
+        self.labelCurAmplitude = tk.Label(frameMotorInfo, text="Cur Amp: ")
+        self.entryCurAmplitude = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelIsd = tk.Label(frameMotorInfo, text="Isd: ")
+        self.entryIsd = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelIsq = tk.Label(frameMotorInfo, text="Isq: ")
+        self.entryIsq = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+
+
+        self.labelVoltAmplitude = tk.Label(frameMotorInfo, text="Volt Amp: ")
+        self.entryVoltAmplitude = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelVdRef = tk.Label(frameMotorInfo, text="Vd Ref:")
+        self.entryVdRef = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+        self.labelVqRef = tk.Label(frameMotorInfo, text="Vq Ref:")
+        self.entryVqRef = tk.Entry(frameMotorInfo, textvariable=tk.IntVar(value=0))
+
+        self.buttonScope = tk.Button(frameMotorInfo, text="Scope ON", command=self.processButtonScope)
 
 
         self.labelConnection.grid(row=0, column=0, padx=5, pady=3, sticky=tk.W+tk.E+tk.S+tk.N)
         self.entryConnection.grid(row=0, column=1, padx=5, pady=3)
-        self.labelStatus.grid(row=0, column=2, padx=5, pady=3)
-        self.entryStatus.grid(row=0, column=3, padx=5, pady=3)
+        self.labelState.grid(row=0, column=2, padx=5, pady=3)
+        self.entryState.grid(row=0, column=3, padx=5, pady=3)
         self.labelError.grid(row=0, column=4, padx=5, pady=3)
         self.entryError.grid(row=0, column=5, padx=5, pady=3)
-        self.labelSpeed.grid(row=1, column=0, padx=5, pady=3)
-        self.entrySpeed.grid(row=1, column=1, padx=5, pady=3)
+        self.labelSpeedRef.grid(row=1, column=0, padx=5, pady=3)
+        self.entrySpeedRef.grid(row=1, column=1, padx=5, pady=3)
+        self.labelSpeed.grid(row=1, column=2, padx=5, pady=3)
+        self.entrySpeed.grid(row=1, column=3, padx=5, pady=3)
+        self.labelVBUS.grid(row=1, column=4, padx=5, pady=3)
+        self.entryVBUS.grid(row=1, column=5, padx=5, pady=3)
+        self.labelCurAmplitude.grid(row=2, column=0, padx=5, pady=3)
+        self.entryCurAmplitude.grid(row=2, column=1, padx=5, pady=3)
+        self.labelIsd.grid(row=2, column=2, padx=5, pady=3)
+        self.entryIsd.grid(row=2, column=3, padx=5, pady=3)
+        self.labelIsq.grid(row=2, column=4, padx=5, pady=3)
+        self.entryIsq.grid(row=2, column=5, padx=5, pady=3)
+
+        self.labelVoltAmplitude.grid(row=3, column=0, padx=5, pady=3)
+        self.entryVoltAmplitude.grid(row=3, column=1, padx=5, pady=3)
+        self.labelVdRef.grid(row=3, column=2, padx=5, pady=3)
+        self.entryVdRef.grid(row=3, column=3, padx=5, pady=3)
+        self.labelVqRef.grid(row=3, column=4, padx=5, pady=3)
+        self.entryVqRef.grid(row=3, column=5, padx=5, pady=3)        
+
+        self.buttonScope.grid(row=4, column=5, padx=10, pady=10)
 
         # Control Frame ==================================================
 
@@ -110,10 +151,6 @@ class mainGUI():
         frameDebug = tk.Frame(self.window)
         frameDebug.grid(row=3, column=0)
 
-        # labelD1 = tk.Label(frameDebug, text="D1: ")
-        # labelD2 = tk.Label(frameDebug, text="D2: ")
-        # labelD3 = tk.Label(frameDebug, text="D3: ")
-
         self.labelDebug = []
         self.entryDebug = []
 
@@ -124,9 +161,6 @@ class mainGUI():
             self.labelDebug[i].grid(row=i, column=0, padx=5, pady=3)
             self.entryDebug[i].grid(row=i, column=1, padx=5, pady=3)
 
-        self.buttonScope = tk.Button(frameDebug, text="Scope ON", command=self.processButtonScope)
-
-        self.buttonScope.grid(row=0, column=2)
 
         # Test Frame ==================================================
 
@@ -138,14 +172,14 @@ class mainGUI():
         #labelTest.pack(side='left')
 
         self.EntryTest1 = tk.Entry(frameTest)
-        self.EntryTest1.grid(row=0, column=0, padx=5, pady=3)
+        self.EntryTest1.grid(row=0, column=1, padx=5, pady=3)
         #labelEntry.pack(side='right')
 
         self.EntryTest2 = tk.Entry(frameTest)
-        self.EntryTest2.grid(row=0, column=1, padx=5, pady=3)        
+        self.EntryTest2.grid(row=0, column=2, padx=5, pady=3)        
 
         self.buttonTest = tk.Button(frameTest, text="Test", command=self.processButtonTest, bg='red')
-        self.buttonTest.grid(row=0, column=2, padx=5, pady=3)
+        self.buttonTest.grid(row=0, column=3, padx=5, pady=3)
 
 
         # ==============================================================
@@ -239,10 +273,8 @@ class mainGUI():
 
         if (self.comState):
             d = []
-            # d.append(self.com_protocol.motor_info_buf[2])
-            d.append(self.motorInfo.motor_speed_rpm)
-            d.append(self.com_protocol.motor_info_buf[3])
-
+            for i in range(len(self.motorInfo.to_plot_data)):
+                d.append(self.motorInfo.to_plot_data[i])
             data.append(d)
 
         return data
@@ -277,21 +309,42 @@ class mainGUI():
             val = self.com_protocol.write_idx
             self.EntryTest2['textvariable'] = tk.StringVar(value=str(val))
 
+            for i in range(len(self.motorInfo.to_plot_data_ylim)):
+                self.scope2.set_channel_ylim(i, self.motorInfo.to_plot_data_ylim[i])
 
-            self.scope2.set_channel_ylim(0, [0, 10000])
+            # Update Motor State
+            val = self.motorInfo.get_motor_state()
+            self.entryState['textvariable'] = tk.StringVar(value=val)
 
             # Update Motor Speed
-            #val = self.com_protocol.motor_info_buf[2] * 60 / 10
             val = self.motorInfo.motor_speed_rpm
             self.entrySpeed['textvariable'] = tk.StringVar(value=str(int(val)) + ' rpm')
 
+            # Update Motor Current Information
+            val = self.motorInfo.cur_amplitude
+            self.entryCurAmplitude['textvariable'] = tk.StringVar(value=str(val))
+
+            val = self.motorInfo.isd_ref
+            
+
+            # Update Motor Voltage Command
+            val = self.motorInfo.volt_amplitude
+            self.entryVoltAmplitude['textvariable'] = tk.StringVar(value=str(val))
+
+            val = self.motorInfo.vd_ref
+            self.entryVdRef['textvariable'] = tk.StringVar(value=str(val))
+
+            val = self.motorInfo.vq_ref
+            self.entryVqRef['textvariable'] = tk.StringVar(value=str(val))            
+
 
             for i in range(len(self.entryDebug)):
-                val = self.com_protocol.motor_info_buf[i]
+                val = self.com_protocol.motor_info_buf[i + 11]
                 self.entryDebug[i]['textvariable'] = tk.IntVar(value=int(val))
 
 
 if __name__ == '__main__':
     app = mainGUI()
+
 
 

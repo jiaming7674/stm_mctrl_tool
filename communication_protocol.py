@@ -119,7 +119,7 @@ class CommunicationProtocol():
 
                     index = frame_bytes[1]
 
-                    self.motor_info_buf[index] = int.from_bytes(frame_bytes[2:4], byteorder='little')
+                    self.motor_info_buf[index] = int.from_bytes(frame_bytes[2:4], byteorder='little', signed=True)
 
                     if self.read_ptr >= self.recv_bytes_buf_size:
                         self.read_ptr -= self.recv_bytes_buf_size
