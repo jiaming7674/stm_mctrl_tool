@@ -135,21 +135,75 @@ class mainGUI():
 
         self.labelSetSpeed = tk.Label(frameControl, text="Set Speed: ")
         self.entrySetSpeed = tk.Entry(frameControl, textvariable=tk.IntVar(value='0'))
+        self.buttonSetSpeed = tk.Button(frameControl, text="Set", command=self.processButtonSetSpeedSend, width = 10)
 
-        self.buttonSetSpeed = tk.Button(frameControl, text="Set", command=self.processButtonSend, width = 10)
+        self.labelSetCurRef = tk.Label(frameControl, text="Set Cur Ref: ")
+        self.entrySetCurRef = tk.Entry(frameControl, textvariable=tk.IntVar(value='0'))
+        self.buttonSetCurRef = tk.Button(frameControl, text="Set", command=self.processButtonSetCurRefSend, width = 10)
+
         self.buttonMotorStart = tk.Button(frameControl, text="Run", command=self.processButtonMotorStart, width = 10, bg='green')
         self.buttonMotorStop = tk.Button(frameControl, text="Stop", command=self.processButtonMotorStop, width = 10, bg='red')
+        self.buttonFaultAck = tk.Button(frameControl, text="Fault Ack", command=self.processButtonFaultAck, width = 10)
 
         self.labelSetSpeed.grid(row=0, column=0, padx=5, pady=3)
         self.entrySetSpeed.grid(row=0, column=1, padx=5, pady=3)
         self.buttonSetSpeed.grid(row=0, column=2, padx=5, pady=3)
         self.buttonMotorStart.grid(row=0, column=3, padx=10, pady=3, sticky=tk.E)
         self.buttonMotorStop.grid(row=0, column=4, padx=10, pady=3, sticky=tk.E)
+        self.buttonFaultAck.grid(row=0, column=5, padx=10, pady=3)
 
+        self.labelSetCurRef.grid(row=1, column=0, padx=5, pady=3)
+        self.entrySetCurRef.grid(row=1, column=1, padx=5, pady=3)
+        self.buttonSetCurRef.grid(row=1, column=2, padx=5, pady=3)
+
+        # Parameter Frame ==================================================
+
+        frameParameter = tk.Frame(self.window)
+        frameParameter.grid(row=3, column=0, padx=5, pady=20)
+
+        self.labelSetRs = tk.Label(frameParameter, text="Rs: ")
+        self.entrySetRs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.buttonSetRs = tk.Button(frameParameter, text="Set", command=None)
+
+        self.labelSetLs = tk.Label(frameParameter, text="Ls: ")
+        self.entrySetLs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.buttonSetLs = tk.Button(frameParameter, text="Set", command=None)
+
+        self.labelSetlamaf = tk.Label(frameParameter, text="Lamaf: ")
+        self.entrySetlamaf = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.buttonSetlamaf = tk.Button(frameParameter, text="Set", command=None)
+
+        self.labelSetJs = tk.Label(frameParameter, text="Js: ")
+        self.entrySetJs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.buttonSetJs = tk.Button(frameParameter, text="Set", command=None)             
+
+        self.labelSetBs = tk.Label(frameParameter, text="Bs: ")
+        self.entrySetBs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.buttonSetBs = tk.Button(frameParameter, text="Set", command=None)    
+
+        self.labelSetRs.grid(row=0, column=0, padx=5, pady=3)
+        self.entrySetRs.grid(row=0, column=1, padx=5, pady=3)
+        self.buttonSetRs.grid(row=0, column=2, padx=5, pady=3)
+
+        self.labelSetLs.grid(row=0, column=3, padx=5, pady=3)
+        self.entrySetLs.grid(row=0, column=4, padx=5, pady=3)
+        self.buttonSetLs.grid(row=0, column=5, padx=5, pady=3)
+
+        self.labelSetlamaf.grid(row=0, column=6, padx=5, pady=3)
+        self.entrySetlamaf.grid(row=0, column=7, padx=5, pady=3)
+        self.buttonSetlamaf.grid(row=0, column=8, padx=5, pady=3)
+
+        self.labelSetJs.grid(row=1, column=0, padx=5, pady=3)
+        self.entrySetJs.grid(row=1, column=1, padx=5, pady=3)
+        self.buttonSetJs.grid(row=1, column=2, padx=5, pady=3)
+
+        self.labelSetBs.grid(row=1, column=3, padx=5, pady=3)
+        self.entrySetBs.grid(row=1, column=4, padx=5, pady=3)
+        self.buttonSetBs.grid(row=1, column=5, padx=5, pady=3)
 
         # Debug Frame ==================================================
         frameDebug = tk.Frame(self.window)
-        frameDebug.grid(row=3, column=0)
+        frameDebug.grid(row=4, column=0)
 
         self.labelDebug = []
         self.entryDebug = []
@@ -165,7 +219,7 @@ class mainGUI():
         # Test Frame ==================================================
 
         frameTest = tk.Frame(self.window)
-        frameTest.grid(row=4, column=0)
+        frameTest.grid(row=5, column=0)
 
         self.labelTest = tk.Label(frameTest, text="Test : ", bg='yellow')
         self.labelTest.grid(row=0, column=0, padx=5, pady=3)
@@ -203,10 +257,11 @@ class mainGUI():
                 self.buttonSS["text"] = "COM Close"
 
 
-    def processButtonSend(self):
+    def processButtonSetSpeedSend(self):
         if (self.comState):
             text = self.entrySetSpeed.get()
-            val = int(text)
+            val = float(text)
+            val = int(val / 60 * 10)
             b = int.to_bytes(val, length=2, byteorder='little', signed=True)
 
             btarray = bytearray(12)
@@ -221,6 +276,24 @@ class mainGUI():
 
             self.com_protocol.serial_port.write(bytesToSend)
 
+
+    def processButtonSetCurRefSend(self):
+        if (self.comState):
+            text = self.entrySetCurRef.get()
+            val = int(text)
+            b = int.to_bytes(val, length=2, byteorder='little', signed=True)
+
+            btarray = bytearray(12)
+            btarray[0] = int('5A', 16)
+            btarray[1] = int('30', 16)
+            btarray[2] = int(b[0])
+            btarray[3] = int(b[1])
+            btarray[11]= int('A5', 16)
+
+            bytesToSend = bytes(btarray)
+            print(bytesToSend)
+
+            self.com_protocol.serial_port.write(bytesToSend)
         
     def processButtonMotorStart(self):
 
@@ -242,6 +315,19 @@ class mainGUI():
             btarray = bytearray(12)
             btarray[0] = int('5A', 16)
             btarray[1] = int('11', 16)
+            btarray[11]= int('A5', 16)
+
+            bytesToSend = bytes(btarray)
+            print(bytesToSend)
+
+            self.com_protocol.serial_port.write(bytesToSend)
+
+
+    def processButtonFaultAck(self):
+        if (self.comState):
+            btarray = bytearray(12)
+            btarray[0] = int('5A', 16)
+            btarray[1] = int('12', 16)
             btarray[11]= int('A5', 16)
 
             bytesToSend = bytes(btarray)
@@ -317,8 +403,11 @@ class mainGUI():
             self.entryState['textvariable'] = tk.StringVar(value=val)
 
             # Update Motor Speed
+            val = self.motorInfo.motor_spd_ref_rpm
+            self.entrySpeedRef['textvariable'] = tk.StringVar(value=str(val) + ' rpm')
+
             val = self.motorInfo.motor_speed_rpm
-            self.entrySpeed['textvariable'] = tk.StringVar(value=str(int(val)) + ' rpm')
+            self.entrySpeed['textvariable'] = tk.StringVar(value=str(val) + ' rpm')
 
             # Update Motor Current Information
             val = self.motorInfo.cur_amplitude

@@ -6,6 +6,7 @@ class MotorInfo():
 
         self.motor_state = 0
         self.fault_state = 0
+        self.motor_spd_ref_rpm = 0
         self.motor_speed_rpm = 0
         self.bus_voltage = 0
 
@@ -32,8 +33,9 @@ class MotorInfo():
     def update_motor_info(self, motor_info_buf):
 
         self.motor_state = int(motor_info_buf[0])
-        self.fault_state = motor_info_buf[1]
-        self.motor_speed_rpm = motor_info_buf[3] * 60 / 10
+        self.fault_state = int(motor_info_buf[1])
+        self.motor_spd_ref_rpm = int(motor_info_buf[2] * 60 / 10)
+        self.motor_speed_rpm = int(motor_info_buf[3] * 60 / 10)
 
         self.volt_amplitude = int(motor_info_buf[6])
         self.vd_ref = int(motor_info_buf[9])
