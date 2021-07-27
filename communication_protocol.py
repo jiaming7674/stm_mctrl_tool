@@ -7,7 +7,7 @@ import time
 class CommunicationProtocol():
 
     def __init__(self):
-
+        self.debug = 0
         self.serial_port = serial.Serial()
         self.serial_port.port = "COM4"
         self.serial_port.baudrate = 921600
@@ -17,19 +17,20 @@ class CommunicationProtocol():
 
         self.com_status = False
 
-        self.recv_bytes_buf_size = 2048
+        self.recv_bytes_buf_size = 10240
         self.received_bytes_buf = bytearray(self.recv_bytes_buf_size)
         self.write_ptr = 0
         self.read_ptr = 0
 
         self.num_channel = 2
-        self.data_buf_size = 512
+        self.data_buf_size = 10240
         self.received_data_buf = []
 
-        self.frame_size = 6 + 2 * self.num_channel
+        self.frame_size = 6 + 2 * self.num_channel * 16
 
         self.read_idx = 0
         self.write_idx = 0
+        self.data_num = 0
 
         for _ in range(self.num_channel):
             self.received_data_buf.append(np.zeros(self.data_buf_size))
@@ -75,7 +76,7 @@ class CommunicationProtocol():
            This method is executed by created thread.'''
         while self.com_status == True:
             try:
-                ch = self.serial_port.read(6)
+                ch = self.serial_port.read(60)
 
                 for i in range(len(ch)):
                     self.received_bytes_buf[self.write_ptr] = ch[i]
@@ -103,10 +104,11 @@ class CommunicationProtocol():
 
     def read_from_received_bytes_buffer(self):
 
+        frame_bytes = bytearray(self.frame_size)
+
         while self.com_status:
             
             if self.bytes_to_read() >= self.frame_size:
-                frame_bytes = bytearray(self.frame_size)
 
                 for i in range(self.frame_size):
                     ptr = self.read_ptr + i
@@ -116,28 +118,43 @@ class CommunicationProtocol():
 
                 if frame_bytes[0] == int('5A', 16) and frame_bytes[self.frame_size-1] == int('A5', 16):
                     self.read_ptr += self.frame_size
-
-                    index = frame_bytes[1]
-
-                    self.motor_info_buf[index] = int.from_bytes(frame_bytes[2:4], byteorder='little', signed=True)
-
                     if self.read_ptr >= self.recv_bytes_buf_size:
                         self.read_ptr -= self.recv_bytes_buf_size
 
-                    for j in range(self.num_channel):
-                        self.received_data_buf[j][self.write_idx] = int.from_bytes(frame_bytes[j*2+4:j*2+6], 'little', signed=True)
+                    index = frame_bytes[1]
+                    self.motor_info_buf[index] = int.from_bytes(frame_bytes[2:4], byteorder='little', signed=True)
+                    self.data_num = frame_bytes[-2]
 
-                    self.write_idx += 1
-                    if self.write_idx >= self.data_buf_size:
-                        self.write_idx = 0
+
+                    write_idx_tmp = self.write_idx
+
+                    for k in range(self.data_num):
+                        for j in range(self.num_channel):
+
+                            a = int(4 + k*2+j*32)
+                            b = int(6 + k*2+j*32)
+
+                            self.received_data_buf[j][write_idx_tmp] = \
+                                int.from_bytes(frame_bytes[a:b], 'little', signed=True)
+
+                        write_idx_tmp += 1
+                        if write_idx_tmp >= self.data_buf_size:
+                            write_idx_tmp = 0
+
+                    self.write_idx = write_idx_tmp
 
                 else:
                     self.read_ptr += 1
                     if self.read_ptr >= self.recv_bytes_buf_size:
                         self.read_ptr = 0
 
+                    self.debug += 1
+                    if self.debug >= 70:
+                        self.debug = 0
+                        print(self.read_ptr)
+
             else:
-                time.sleep(0.005)
+                time.sleep(0.001)
 
 
     def datas_to_read(self):
@@ -150,7 +167,9 @@ class CommunicationProtocol():
         '''Read received data from data buffer.'''
         data = []
 
-        while self.datas_to_read():
+        read_num = self.datas_to_read()
+
+        for _ in range(read_num):
             ng = []
 
             for i in range(self.num_channel):

@@ -70,10 +70,21 @@ class Scope():
 
         data = self.callback()
 
-        for i in range(len(data)):
+        if data.shape[1] == 0:
+            return self.lines
 
-            for j in range(len(self.lines)):
-                self.y[j][0] = data[i][j]
+        # for i in range(len(data)):
+
+        #     for j in range(len(self.lines)):
+        #         self.y[j][0] = data[i][j]
+        #         self.y[j] = np.roll(self.y[j], -1)
+
+        # for i in range(len(self.lines)):
+        #     self.lines[i].set_ydata(self.y[i])
+
+        for i in range(data.shape[1]):
+            for j in range(data.shape[0]):
+                self.y[j][0] = data[j][i]
                 self.y[j] = np.roll(self.y[j], -1)
 
         for i in range(len(self.lines)):
@@ -98,9 +109,13 @@ class Scope():
         if plt_show == True:
             plt.show()
 
-    def null_func(self):
 
+    def null_func(self):
         return []
+
+
+    def quit(self):
+        plt.close()
 
 
 if __name__ == '__main__':

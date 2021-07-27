@@ -17,11 +17,12 @@ class mainGUI():
         self.window.title("Motor Tool")
 
         self.comState = False
+        self.isRunning = True
 
         self.com_protocol = CommunicationProtocol()
         self.motorInfo = MotorInfo()
 
-        self.scope1 = Scope()
+        self.scope1 = Scope(data_len=1600, fps=10)
         self.scope1.callback = self.readFromSerialPort
 
         self.scope2 = Scope(num_of_channels=4, data_len=1000, fps=50, plot_data=self.motorInfo.plot_data)
@@ -234,15 +235,16 @@ class mainGUI():
         self.EntryTest2 = tk.Entry(frameTest)
         self.EntryTest2.grid(row=0, column=2, padx=5, pady=3)        
 
+        self.EntryTest3 = tk.Entry(frameTest)
+        self.EntryTest3.grid(row=1, column=0, padx=5, pady=3)            
+
         self.buttonTest = tk.Button(frameTest, text="Test", command=self.processButtonTest, bg='red')
         self.buttonTest.grid(row=0, column=3, padx=5, pady=3)
 
 
-        # ==============================================================
-
+    def start(self):
         self.thread1 = threading.Thread(target=self.processUpdateData)
         self.thread1.start()
-
         self.window.mainloop()
 
 
@@ -349,23 +351,44 @@ class mainGUI():
 
 
     def readFromSerialPort(self):
-        data = []
-        if (self.comState):
-            data = self.com_protocol.read_from_data_buffer()
 
-        return data
+        if (self.comState):
+
+            read_num = self.com_protocol.datas_to_read()
+            data = np.zeros((2, read_num))
+
+            read_idx = self.com_protocol.read_idx
+            buf_size = self.com_protocol.data_buf_size
+
+            for i in range(read_num):
+                data[0][i] = self.com_protocol.received_data_buf[0][read_idx]
+                data[1][i] = self.com_protocol.received_data_buf[1][read_idx]
+
+                read_idx += 1
+                if read_idx >= buf_size:
+                    read_idx = 0
+            
+            self.com_protocol.read_idx = read_idx
+
+            return data
+
+        else:
+            return np.zeros((2, 0))
 
     
     def readFromMotorInfo(self):
-        data = []
 
         if (self.comState):
-            d = []
-            for i in range(len(self.motorInfo.plot_data)):
-                d.append(self.motorInfo.plot_data[i]['d'])
-            data.append(d)
+            num_of_data = len(self.motorInfo.plot_data)
+            data = np.zeros((num_of_data, 1))
 
-        return data
+            for i in range(len(self.motorInfo.plot_data)):
+                data[i][0] = self.motorInfo.plot_data[i]['d']
+
+            return data
+
+        else:
+            return np.zeros((num_of_data,0))
 
 
     def processButtonTest(self):
@@ -386,7 +409,7 @@ class mainGUI():
 
     def processUpdateData(self):
 
-        while True:
+        while self.isRunning == True:
             time.sleep(0.1)
 
             self.motorInfo.update_motor_info(self.com_protocol.motor_info_buf)
@@ -396,6 +419,10 @@ class mainGUI():
 
             val = self.com_protocol.write_idx
             self.EntryTest2['textvariable'] = tk.StringVar(value=str(val))
+
+            val = self.com_protocol.debug
+            self.EntryTest3['textvariable'] = tk.StringVar(value=str(val))
+            
 
             # Update Motor State
             val = self.motorInfo.get_motor_state()
@@ -412,9 +439,8 @@ class mainGUI():
             val = self.motorInfo.cur_amplitude
             self.entryCurAmplitude['textvariable'] = tk.StringVar(value=str(val))
 
-            val = self.motorInfo.isd_ref
+            #val = self.motorInfo.isd_ref
             
-
             # Update Motor Voltage Command
             val = self.motorInfo.volt_amplitude
             self.entryVoltAmplitude['textvariable'] = tk.StringVar(value=str(val))
@@ -431,8 +457,23 @@ class mainGUI():
                 self.entryDebug[i]['textvariable'] = tk.IntVar(value=int(val))
 
 
+    def quit(self):
+        self.isRunning = False
+        self.scope1.quit()
+        self.scope2.quit()
+        self.com_protocol.close_com_port()
+        self.thread1.join()
+
+
 if __name__ == '__main__':
+    
     app = mainGUI()
+
+    try:
+        app.start()
+    except:
+        app.quit()
+        print("quit ..")
 
 
 
