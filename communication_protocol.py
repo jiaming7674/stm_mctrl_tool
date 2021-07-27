@@ -10,20 +10,20 @@ class CommunicationProtocol():
 
         self.serial_port = serial.Serial()
         self.serial_port.port = "COM4"
-        self.serial_port.baudrate = 115200
+        self.serial_port.baudrate = 921600
         self.serial_port.parity = serial.PARITY_NONE
         self.serial_port.stopbits = serial.STOPBITS_ONE
         self.serial_port.timeout = 100  # sec
 
         self.com_status = False
 
-        self.recv_bytes_buf_size = 1024
+        self.recv_bytes_buf_size = 2048
         self.received_bytes_buf = bytearray(self.recv_bytes_buf_size)
         self.write_ptr = 0
         self.read_ptr = 0
 
         self.num_channel = 2
-        self.data_buf_size = 128
+        self.data_buf_size = 512
         self.received_data_buf = []
 
         self.frame_size = 6 + 2 * self.num_channel

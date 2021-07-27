@@ -13,21 +13,22 @@ class MotorInfo():
         self.isd_ref = 0
         self.isq_ref = 0
 
+        self.isd = 0
+        self.isq = 0
+
         self.cur_amplitude = 0
         self.volt_amplitude = 0
 
         self.vd_ref = 0
         self.vq_ref = 0
 
-        self.to_plot_data_ylim = [
-                            [0, 14000],
-                            [-50000, 50000],
-                            [-50000, 50000],
+        self.plot_data = [
+            {'d' : self.motor_spd_ref_rpm, 'ylim' : [-2000, 14000], 'label' : 'speed_ref', 'channel' : 0},
+            {'d' : self.motor_speed_rpm, 'ylim' : [-2000, 14000], 'label' : 'speed', 'channel' : 0},
+            {'d' : self.vd_ref, 'ylim' : [-10000, 1000], 'label' : 'vd_ref', 'channel' : 1},
+            {'d' : self.vq_ref, 'ylim' : [-1000, 40000], 'label' : 'vq_ref', 'channel' : 2},
+            {'d' : self.cur_amplitude, 'ylim' : [-1000, 1500], 'label' : 'vq_ref', 'channel' : 3},
         ]
-
-        self.to_plot_data = [self.motor_speed_rpm,
-                             self.vd_ref,
-                             self.vq_ref]
 
         
     def update_motor_info(self, motor_info_buf):
@@ -37,13 +38,19 @@ class MotorInfo():
         self.motor_spd_ref_rpm = int(motor_info_buf[2] * 60 / 10)
         self.motor_speed_rpm = int(motor_info_buf[3] * 60 / 10)
 
+        self.cur_amplitude = int(motor_info_buf[5])
+        self.isd = int(motor_info_buf[7])
+        self.isq = int(motor_info_buf[8])
+
         self.volt_amplitude = int(motor_info_buf[6])
         self.vd_ref = int(motor_info_buf[9])
         self.vq_ref = int(motor_info_buf[10])
 
-        self.to_plot_data = [self.motor_speed_rpm,
-                             self.vd_ref,
-                             self.vq_ref]
+        self.plot_data[0]['d'] = self.motor_spd_ref_rpm
+        self.plot_data[1]['d'] = self.motor_speed_rpm
+        self.plot_data[2]['d'] = self.vd_ref
+        self.plot_data[3]['d'] = self.vq_ref
+        self.plot_data[4]['d'] = self.cur_amplitude
 
 
     def get_motor_state(self):

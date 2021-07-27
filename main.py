@@ -24,10 +24,12 @@ class mainGUI():
         self.scope1 = Scope()
         self.scope1.callback = self.readFromSerialPort
 
-        num_of_channel = len(self.motorInfo.to_plot_data)
-        self.scope2 = Scope(num_of_channels=num_of_channel, data_len=1000, fps=50)
+        self.scope2 = Scope(num_of_channels=4, data_len=1000, fps=50, plot_data=self.motorInfo.plot_data)
         self.scope2.callback = self.readFromMotorInfo
 
+        for i in range(len(self.motorInfo.plot_data)):
+            ch = self.motorInfo.plot_data[i]['channel']
+            self.scope2.set_channel_ylim(ch, self.motorInfo.plot_data[i]['ylim'])
 
         # COM Information Frame =====================================
         frame_COMinf = tk.Frame(self.window)
@@ -38,7 +40,7 @@ class mainGUI():
         self.entryCOM = tk.Entry(frame_COMinf, textvariable=self.COM)
 
         self.labelBaudrate = tk.Label(frame_COMinf, text="Baudrate: ")
-        self.Baudrate = tk.IntVar(value=115200)
+        self.Baudrate = tk.IntVar(value=921600)
         self.entryBaudrate = tk.Entry(frame_COMinf, textvariable=self.Baudrate)
 
         self.labelParity = tk.Label(frame_COMinf, text="Parity: ")
@@ -359,8 +361,8 @@ class mainGUI():
 
         if (self.comState):
             d = []
-            for i in range(len(self.motorInfo.to_plot_data)):
-                d.append(self.motorInfo.to_plot_data[i])
+            for i in range(len(self.motorInfo.plot_data)):
+                d.append(self.motorInfo.plot_data[i]['d'])
             data.append(d)
 
         return data
@@ -394,9 +396,6 @@ class mainGUI():
 
             val = self.com_protocol.write_idx
             self.EntryTest2['textvariable'] = tk.StringVar(value=str(val))
-
-            for i in range(len(self.motorInfo.to_plot_data_ylim)):
-                self.scope2.set_channel_ylim(i, self.motorInfo.to_plot_data_ylim[i])
 
             # Update Motor State
             val = self.motorInfo.get_motor_state()

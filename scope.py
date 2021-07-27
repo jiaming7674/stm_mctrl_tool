@@ -5,15 +5,17 @@ import matplotlib.animation as animation
 
 class Scope():
 
-    def __init__(self, num_of_channels=2, data_len=1000, fps=50):
+    def __init__(self, num_of_channels=2, data_len=1000, fps=50, plot_data=None):
 
         self.enable = False
 
         self.num_of_channels=num_of_channels
         self.data_len = data_len
         self.fps = fps
+        self.plot_data = plot_data
 
-        self.fig, self.ax = plt.subplots(self.num_of_channels, 1)
+        self.fig, self.ax = plt.subplots(self.num_of_channels, 1, figsize=(10, 7), sharex='all')
+        self.fig.subplots_adjust(top = 0.98, bottom = 0.05, left = 0.08, right = 0.95)
 
         self.lines = []
 
@@ -24,7 +26,14 @@ class Scope():
 
         self.c = ['blue', 'red', 'green', 'orange', 'black']
 
-        for i in range(len(self.ax)):
+        self.legends = []
+
+        if self.plot_data == None:
+            num_of_lines = num_of_channels
+        else:
+            num_of_lines = len(plot_data)
+
+        for i in range(num_of_lines):
             line = plt.Line2D(self.x , np.zeros(len(self.x)), color=self.c[i])
             self.lines.append(line)
 
@@ -39,10 +48,20 @@ class Scope():
 
 
     def plot_init(self):
+
         for i in range(len(self.lines)):
             self.y.append(np.zeros(len(self.x)))
             self.lines[i].set_ydata(self.y[i])
-            self.ax[i].add_line(self.lines[i])
+
+        if self.plot_data == None:
+            for i in range(len(self.lines)):
+                self.ax[i].add_line(self.lines[i])   ### <<<<----
+        else:
+            for i in range(len(self.plot_data)):
+                ch = self.plot_data[i]['channel']
+                print('ch = %d, i=%d' % (ch, i))
+                self.ax[ch].add_line(self.lines[i])
+
 
         return self.lines
 
@@ -53,7 +72,7 @@ class Scope():
 
         for i in range(len(data)):
 
-            for j in range(self.num_of_channels):
+            for j in range(len(self.lines)):
                 self.y[j][0] = data[i][j]
                 self.y[j] = np.roll(self.y[j], -1)
 
