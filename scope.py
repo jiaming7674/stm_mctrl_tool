@@ -73,15 +73,6 @@ class Scope():
         if data.shape[1] == 0:
             return self.lines
 
-        # for i in range(len(data)):
-
-        #     for j in range(len(self.lines)):
-        #         self.y[j][0] = data[i][j]
-        #         self.y[j] = np.roll(self.y[j], -1)
-
-        # for i in range(len(self.lines)):
-        #     self.lines[i].set_ydata(self.y[i])
-
         for i in range(data.shape[1]):
             for j in range(data.shape[0]):
                 self.y[j][0] = data[j][i]
@@ -110,8 +101,9 @@ class Scope():
             plt.show()
 
 
-    def null_func(self):
-        return []
+    def null_func(self) -> np.float:
+        x = np.zeros(1, 1)
+        return x
 
 
     def quit(self):

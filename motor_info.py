@@ -27,7 +27,7 @@ class MotorInfo():
             {'d' : self.motor_speed_rpm, 'ylim' : [-2000, 14000], 'label' : 'speed', 'channel' : 0},
             {'d' : self.vd_ref, 'ylim' : [-10000, 1000], 'label' : 'vd_ref', 'channel' : 1},
             {'d' : self.vq_ref, 'ylim' : [-1000, 40000], 'label' : 'vq_ref', 'channel' : 2},
-            {'d' : self.cur_amplitude, 'ylim' : [-1000, 1500], 'label' : 'vq_ref', 'channel' : 3},
+            {'d' : self.cur_amplitude, 'ylim' : [-1000, 15000], 'label' : 'vq_ref', 'channel' : 3},
         ]
 
         

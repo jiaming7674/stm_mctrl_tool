@@ -17,6 +17,7 @@ class mainGUI():
         self.window.title("Motor Tool")
 
         self.comState = False
+        self.monitorState = False
         self.isRunning = True
 
         self.com_protocol = CommunicationProtocol()
@@ -24,6 +25,9 @@ class mainGUI():
 
         self.scope1 = Scope(data_len=1600, fps=10)
         self.scope1.callback = self.readFromSerialPort
+
+        self.scope1.set_channel_ylim(0, [-10000, 10000])
+        self.scope1.set_channel_ylim(1, [-40000, 40000])
 
         self.scope2 = Scope(num_of_channels=4, data_len=1000, fps=50, plot_data=self.motorInfo.plot_data)
         self.scope2.callback = self.readFromMotorInfo
@@ -56,6 +60,8 @@ class mainGUI():
         self.comboStopbits["values"] = ("1", "1.5", "2")
         self.comboStopbits["state"] = "readonly"
         self.buttonSS = tk.Button(frame_COMinf, text="COM Open", command=self.processButtonSS)
+        self.buttonMonitorON = tk.Button(frame_COMinf, text="Monitor ON", command=self.processButtonMonitorON)
+        self.buttonMonitorOFF = tk.Button(frame_COMinf, text="Monitor OFF", command=self.processButtonMonitorOFF)
 
         self.labelCOM.grid(row=0, column=0, padx=5, pady=3)
         self.entryCOM.grid(row=0, column=1, padx=5, pady=3)
@@ -66,6 +72,8 @@ class mainGUI():
         self.labelStopbits.grid(row=1, column=2, padx=5, pady=3)
         self.comboStopbits.grid(row=1, column=3, padx=5, pady=3)
         self.buttonSS.grid(row=1, column=4, padx=5, pady=3)
+        self.buttonMonitorON.grid(row=1, column=5, padx=5, pady=3)
+        self.buttonMonitorOFF.grid(row=1, column=6, padx=5, pady=3)
 
         # Motor Information Frame =====================================
         frameMotorInfo = tk.Frame(self.window)
@@ -166,11 +174,11 @@ class mainGUI():
 
         self.labelSetRs = tk.Label(frameParameter, text="Rs: ")
         self.entrySetRs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
-        self.buttonSetRs = tk.Button(frameParameter, text="Set", command=None)
+        self.buttonSetRs = tk.Button(frameParameter, text="Set", command=self.processButtonSetRs)
 
         self.labelSetLs = tk.Label(frameParameter, text="Ls: ")
         self.entrySetLs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
-        self.buttonSetLs = tk.Button(frameParameter, text="Set", command=None)
+        self.buttonSetLs = tk.Button(frameParameter, text="Set", command=self.processButtonSetLs)
 
         self.labelSetlamaf = tk.Label(frameParameter, text="Lamaf: ")
         self.entrySetlamaf = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
@@ -212,7 +220,7 @@ class mainGUI():
         self.entryDebug = []
 
         for i in range(6):
-            self.labelDebug.append(tk.Label(frameDebug, text='D'+ str(i) + ': '))
+            self.labelDebug.append(tk.Label(frameDebug, text='D'+ str(i+1) + ': '))
             self.entryDebug.append(tk.Entry(frameDebug, textvariable=tk.IntVar(value=0)))
 
             self.labelDebug[i].grid(row=i, column=0, padx=5, pady=3)
@@ -249,7 +257,6 @@ class mainGUI():
 
 
     def processButtonSS(self):
-        
         if (self.comState):
             if self.com_protocol.close_com_port() == True:
                 self.comState = False
@@ -261,78 +268,71 @@ class mainGUI():
                 self.buttonSS["text"] = "COM Close"
 
 
+    def processButtonMonitorON(self):
+        self.send_tx_frame(int('71', 16), 0)
+
+    def processButtonMonitorOFF(self):
+        self.send_tx_frame(int('70', 16), 0)
+
+
     def processButtonSetSpeedSend(self):
         if (self.comState):
             text = self.entrySetSpeed.get()
             val = float(text)
             val = int(val / 60 * 10)
-            b = int.to_bytes(val, length=2, byteorder='little', signed=True)
-
-            btarray = bytearray(12)
-            btarray[0] = int('5A', 16)
-            btarray[1] = int('20', 16)
-            btarray[2] = int(b[0])
-            btarray[3] = int(b[1])
-            btarray[11]= int('A5', 16)
-
-            bytesToSend = bytes(btarray)
-            print(bytesToSend)
-
-            self.com_protocol.serial_port.write(bytesToSend)
+            self.send_tx_frame(int('20', 16), val)
 
 
     def processButtonSetCurRefSend(self):
-        if (self.comState):
-            text = self.entrySetCurRef.get()
-            val = int(text)
-            b = int.to_bytes(val, length=2, byteorder='little', signed=True)
+        text = self.entrySetCurRef.get()
+        val = int(text)
+        self.send_tx_frame(int('30', 16), val)
 
-            btarray = bytearray(12)
-            btarray[0] = int('5A', 16)
-            btarray[1] = int('30', 16)
-            btarray[2] = int(b[0])
-            btarray[3] = int(b[1])
-            btarray[11]= int('A5', 16)
-
-            bytesToSend = bytes(btarray)
-            print(bytesToSend)
-
-            self.com_protocol.serial_port.write(bytesToSend)
         
     def processButtonMotorStart(self):
-
-        if (self.comState):
-            btarray = bytearray(12)
-            btarray[0] = int('5A', 16)
-            btarray[1] = int('10', 16)
-            btarray[11]= int('A5', 16)
-
-            bytesToSend = bytes(btarray)
-            print(bytesToSend)
-
-            self.com_protocol.serial_port.write(bytesToSend)
+        self.send_tx_frame(int('10', 16), 0)
 
 
     def processButtonMotorStop(self):
-
-        if (self.comState):
-            btarray = bytearray(12)
-            btarray[0] = int('5A', 16)
-            btarray[1] = int('11', 16)
-            btarray[11]= int('A5', 16)
-
-            bytesToSend = bytes(btarray)
-            print(bytesToSend)
-
-            self.com_protocol.serial_port.write(bytesToSend)
+        self.send_tx_frame(int('11', 16), 0)
 
 
     def processButtonFaultAck(self):
+        self.send_tx_frame(int('12', 16), 0)
+
+
+    def processButtonSetRs(self):
+        try:
+            text = self.entrySetRs.get()
+            val = float(text)
+            val = int(val*65535)
+            print(val)
+            self.send_tx_frame(int('40', 16), val, signed=False)
+        except Exception as e:
+            print(e)
+
+
+    def processButtonSetLs(self):
+        try:
+            text = self.entrySetLs.get()
+            val = float(text)
+            val = int(val*65535)
+            self.send_tx_frame(int('41', 16), val, signed=False)
+        except Exception as e:
+            print(e)
+
+
+
+    def send_tx_frame(self, code, data, signed=True):
         if (self.comState):
+            b = data.to_bytes(2, 'little', signed=signed)
+
             btarray = bytearray(12)
             btarray[0] = int('5A', 16)
-            btarray[1] = int('12', 16)
-            btarray[11]= int('A5', 16)
+            btarray[1] = code
+            btarray[2] = b[0]
+            btarray[3] = b[1]
+            btarray[11] = int('5A', 16)
 
             bytesToSend = bytes(btarray)
             print(bytesToSend)
@@ -394,18 +394,6 @@ class mainGUI():
     def processButtonTest(self):
         self.labelTest['text'] = "Hello World"
 
-        if (self.comState):
-            btarray = bytearray(12)
-            btarray[0] = int('5A', 16)
-            btarray[1] = int('10', 16)
-            btarray[2] = int('AA', 16)
-            btarray[11]= int('A5', 16)
-
-            bytesToSend = bytes(btarray)
-            print(bytesToSend)
-
-            self.com_protocol.serial_port.write(bytesToSend)
-
 
     def processUpdateData(self):
 
@@ -420,13 +408,17 @@ class mainGUI():
             val = self.com_protocol.write_idx
             self.EntryTest2['textvariable'] = tk.StringVar(value=str(val))
 
-            val = self.com_protocol.debug
+            val = self.com_protocol.data_num
             self.EntryTest3['textvariable'] = tk.StringVar(value=str(val))
             
 
             # Update Motor State
             val = self.motorInfo.get_motor_state()
             self.entryState['textvariable'] = tk.StringVar(value=val)
+
+            val = self.motorInfo.fault_state
+            val = str(val)
+            self.entryError['textvariable'] = tk.StringVar(value=val)
 
             # Update Motor Speed
             val = self.motorInfo.motor_spd_ref_rpm
@@ -439,7 +431,11 @@ class mainGUI():
             val = self.motorInfo.cur_amplitude
             self.entryCurAmplitude['textvariable'] = tk.StringVar(value=str(val))
 
-            #val = self.motorInfo.isd_ref
+            val = self.motorInfo.isd
+            self.entryIsd['textvariable'] = tk.StringVar(value=str(val))
+
+            val = self.motorInfo.isq
+            self.entryIsq['textvariable'] = tk.StringVar(value=str(val))
             
             # Update Motor Voltage Command
             val = self.motorInfo.volt_amplitude
