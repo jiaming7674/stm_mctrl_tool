@@ -173,24 +173,40 @@ class mainGUI():
         frameParameter.grid(row=3, column=0, padx=5, pady=20)
 
         self.labelSetRs = tk.Label(frameParameter, text="Rs: ")
-        self.entrySetRs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.entrySetRs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.2))
         self.buttonSetRs = tk.Button(frameParameter, text="Set", command=self.processButtonSetRs)
 
         self.labelSetLs = tk.Label(frameParameter, text="Ls: ")
-        self.entrySetLs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.entrySetLs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.001))
         self.buttonSetLs = tk.Button(frameParameter, text="Set", command=self.processButtonSetLs)
 
         self.labelSetlamaf = tk.Label(frameParameter, text="Lamaf: ")
-        self.entrySetlamaf = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
-        self.buttonSetlamaf = tk.Button(frameParameter, text="Set", command=None)
+        self.entrySetlamaf = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.0016))
+        self.buttonSetlamaf = tk.Button(frameParameter, text="Set", command=self.processButtonSetLamaf)
 
         self.labelSetJs = tk.Label(frameParameter, text="Js: ")
-        self.entrySetJs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
-        self.buttonSetJs = tk.Button(frameParameter, text="Set", command=None)             
+        self.entrySetJs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.000008))
+        self.buttonSetJs = tk.Button(frameParameter, text="Set", command=self.processButtonSetMecParm)             
 
         self.labelSetBs = tk.Label(frameParameter, text="Bs: ")
-        self.entrySetBs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
-        self.buttonSetBs = tk.Button(frameParameter, text="Set", command=None)    
+        self.entrySetBs = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.000004))
+        self.buttonSetBs = tk.Button(frameParameter, text="Set", command=self.processButtonSetMecParm)    
+
+        self.labelSetPhiGain = tk.Label(frameParameter, text="PhiGain: ")
+        self.entrySetPhiGain = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0))
+        self.buttonSetPhiGain = tk.Button(frameParameter, text="Set", command=self.processButtonSetPhiGain)
+
+        self.labelSetCompDGain = tk.Label(frameParameter, text="CompDGain: ")
+        self.entrySetCompDGain = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.1))
+        self.buttonSetCompDGain = tk.Button(frameParameter, text="Set", command=self.processButtonSetComdDGain)
+
+        self.labelSetCompQGain = tk.Label(frameParameter, text="CompQGain: ")
+        self.entrySetCompQGain = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.1))
+        self.buttonSetCompQGain = tk.Button(frameParameter, text="Set", command=self.processButtonSetComdDGain)
+
+        self.labelSetCompShift = tk.Label(frameParameter, text="CompPhaseShift: ")
+        self.entrySetCompShift = tk.Entry(frameParameter, textvariable=tk.IntVar(value=60))
+        self.buttonSetCompShift = tk.Button(frameParameter, text="Set", command=self.processButtonSetCompPhaseShift)                
 
         self.labelSetRs.grid(row=0, column=0, padx=5, pady=3)
         self.entrySetRs.grid(row=0, column=1, padx=5, pady=3)
@@ -211,6 +227,22 @@ class mainGUI():
         self.labelSetBs.grid(row=1, column=3, padx=5, pady=3)
         self.entrySetBs.grid(row=1, column=4, padx=5, pady=3)
         self.buttonSetBs.grid(row=1, column=5, padx=5, pady=3)
+
+        self.labelSetPhiGain.grid(row=2, column=0, padx=5, pady=3)
+        self.entrySetPhiGain.grid(row=2, column=1, padx=5, pady=3)
+        self.buttonSetPhiGain.grid(row=2, column=2, padx=5, pady=3)
+
+        self.labelSetCompDGain.grid(row=3, column=0, padx=5, pady=3)
+        self.entrySetCompDGain.grid(row=3, column=1, padx=5, pady=3)
+        self.buttonSetCompDGain.grid(row=3, column=2, padx=5, pady=3)
+
+        self.labelSetCompQGain.grid(row=3, column=3, padx=5, pady=3)
+        self.entrySetCompQGain.grid(row=3, column=4, padx=5, pady=3)
+        self.buttonSetCompQGain.grid(row=3, column=5, padx=5, pady=3)
+
+        self.labelSetCompShift.grid(row=3, column=6, padx=5, pady=3)
+        self.entrySetCompShift.grid(row=3, column=7, padx=5, pady=3)
+        self.buttonSetCompShift.grid(row=3, column=8, padx=5, pady=3)
 
         # Debug Frame ==================================================
         frameDebug = tk.Frame(self.window)
@@ -321,6 +353,68 @@ class mainGUI():
         except Exception as e:
             print(e)
 
+    def processButtonSetLamaf(self):
+        try:
+            text = self.entrySetlamaf.get()
+            val = float(text)
+            val = int(val*65535)
+            self.send_tx_frame(int('42', 16), val, signed=False)
+        except Exception as e:
+            print(e)
+
+    def processButtonSetMecParm(self):
+        try:
+            J = float(self.entrySetJs.get())
+            B = float(self.entrySetBs.get())
+            Ts = 1/32e3
+
+            val1 = int(Ts/J * 16777216)
+            b1 = val1.to_bytes(4, 'little', signed=True)
+            self.send_tx_frame(int('43', 16), int.from_bytes(b1[0:2], 'little', signed=False), signed=False)
+            time.sleep(0.1)
+            self.send_tx_frame(int('44', 16), int.from_bytes(b1[2:4], 'little', signed=False), signed=False)
+            time.sleep(0.1)
+
+            val2 = int(1/(1+B/J*Ts) * 16777216)
+            b2 = val2.to_bytes(4, 'little', signed=True)
+            self.send_tx_frame(int('45', 16), int.from_bytes(b2[0:2], 'little', signed=False), signed=False)
+            time.sleep(0.1)
+            self.send_tx_frame(int('46', 16), int.from_bytes(b2[2:4], 'little', signed=False), signed=False)
+            self.send_tx_frame(int('47', 16), 0)
+        except Exception as e:
+            print(e)
+
+
+    def processButtonSetPhiGain(self):
+        try:
+            val = int(self.entrySetPhiGain.get())
+            self.send_tx_frame(int('48', 16), val, signed=True)
+        except Exception as e:
+            print(e)
+
+
+    def processButtonSetComdDGain(self):
+        try:
+            val = int(float(self.entrySetCompDGain.get()) * 32768)
+            self.send_tx_frame(int('60', 16), val, signed=True)
+        except Exception as e:
+            print(e)
+
+
+    def processButtonSetComdQGain(self):
+        try:
+            val = int(float(self.entrySetCompQGain.get()) * 32768)
+            self.send_tx_frame(int('61', 16), val, signed=True)
+        except Exception as e:
+            print(e)
+
+
+    def processButtonSetCompPhaseShift(self):
+        try:
+            val = int(float(self.entrySetCompShift.get()) / 180 * 32768)
+            self.send_tx_frame(int('62', 16), val, signed=True)
+        except Exception as e:
+            print(e)
 
 
     def send_tx_frame(self, code, data, signed=True):
