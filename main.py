@@ -316,8 +316,7 @@ class mainGUI():
 
 
     def processButtonSetCurRefSend(self):
-        text = self.entrySetCurRef.get()
-        val = int(text)
+        val = int(float(self.entrySetCurRef.get()) * 16384)
         self.send_tx_frame(int('30', 16), val)
 
         
@@ -482,6 +481,7 @@ class mainGUI():
             return data
 
         else:
+            num_of_data = len(self.motorInfo.plot_data)
             return np.zeros((num_of_data,0))
 
 
