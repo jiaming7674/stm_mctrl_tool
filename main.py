@@ -202,7 +202,7 @@ class mainGUI():
 
         self.labelSetCompQGain = tk.Label(frameParameter, text="CompQGain: ")
         self.entrySetCompQGain = tk.Entry(frameParameter, textvariable=tk.IntVar(value=0.1))
-        self.buttonSetCompQGain = tk.Button(frameParameter, text="Set", command=self.processButtonSetComdDGain)
+        self.buttonSetCompQGain = tk.Button(frameParameter, text="Set", command=self.processButtonSetComdQGain)
 
         self.labelSetCompShift = tk.Label(frameParameter, text="CompPhaseShift: ")
         self.entrySetCompShift = tk.Entry(frameParameter, textvariable=tk.IntVar(value=60))
