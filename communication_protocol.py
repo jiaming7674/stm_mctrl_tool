@@ -9,7 +9,7 @@ class CommunicationProtocol():
     def __init__(self):
         self.debug = 0
         self.serial_port = serial.Serial()
-        self.serial_port.port = "COM4"
+        self.serial_port.port = "COM3"
         self.serial_port.baudrate = 921600
         self.serial_port.parity = serial.PARITY_NONE
         self.serial_port.stopbits = serial.STOPBITS_ONE

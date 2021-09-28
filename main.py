@@ -41,7 +41,7 @@ class mainGUI():
         frame_COMinf.grid(row=0, column=0)
 
         self.labelCOM = tk.Label(frame_COMinf, text="COMx: ")
-        self.COM = tk.StringVar(value="COM4")
+        self.COM = tk.StringVar(value="COM3")
         self.entryCOM = tk.Entry(frame_COMinf, textvariable=self.COM)
 
         self.labelBaudrate = tk.Label(frame_COMinf, text="Baudrate: ")
@@ -316,7 +316,7 @@ class mainGUI():
 
 
     def processButtonSetCurRefSend(self):
-        val = int(float(self.entrySetCurRef.get()) * 16384)
+        val = int(float(self.entrySetCurRef.get()) * 7342)
         self.send_tx_frame(int('30', 16), val)
 
         
